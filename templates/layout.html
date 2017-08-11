@@ -14,11 +14,27 @@
         <header>
             <div class="container">
                 <div class="site-header">
-                    <a class="logo" href="index.html"><i class="material-icons">library_books</i></a>
-                    <a class="button icon-right" href="new.html"><span>New Entry</span> <i class="material-icons">add</i></a>
+                    <a class="logo" href="{{ url_for('index') }}"><i class="material-icons">library_books</i></a>
+
+                    {% if current_user.is_authenticated %}
+                        <a class="button button-secondary no-icon" href="{{ url_for('logout') }}"><span>Log out</span></a>
+
+                        <a class="button icon-right" href="{{ url_for('entry') }}"><span>New Entry</span> <i class="material-icons">add</i></a>
+                    {% else %}
+                        <a class="button button-secondary no-icon" href="{{ url_for('login') }}"><span>Log in</span></a>
+
+                        <a class="button no-icon" href="{{ url_for('register') }}"><span>Register</span></a>
+                    {% endif %}
                 </div>
             </div>
         </header>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="notification {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         <section>
             <!-- page content displays here -->
             {% block content %}{% endblock %}

@@ -65,19 +65,19 @@ class JournalEntryModelTestCase(unittest.TestCase):
             )
             self.assertEqual(JournalEntry.user, user)
 
-# Create “list” view using the route /entries.
-# The list view contains a list of journal entries, which displays Title and Date for Entry.
-# Title should be hyperlinked to the detail page for each journal entry.
-# Include a link to add an entry.
+# Create “add/edit” view with the route “/entry”
+# that allows the user to add or edit journal entry with the following fields:
+# Title, Date, Time Spent, What You Learned, Resources to Remember.
+# Add the ability to delete a journal entry.
 
 # Create “details” view with the route “/details” displaying the journal entry with all fields:
 # Title, Date, Time Spent, What You Learned, Resources to Remember.
 # Include a link to edit the entry.
 
-# Create “add/edit” view with the route “/entry”
-# that allows the user to add or edit journal entry with the following fields:
-# Title, Date, Time Spent, What You Learned, Resources to Remember.
-# Add the ability to delete a journal entry.
+# Create “list” view using the route /entries.
+# The list view contains a list of journal entries, which displays Title and Date for Entry.
+# Title should be hyperlinked to the detail page for each journal entry.
+# Include a link to add an entry.
 
 # Use the supplied HTML/CSS to build and style your pages.
 # Use CSS to style headings, font colors, journal entry container colors, body colors.

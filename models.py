@@ -30,7 +30,7 @@ class User(UserMixin, Model):
 class JournalEntry(Model):
     """Class to save Journal Entry content"""
     user = ForeignKeyField(User, related_name='journal_entries')
-    timestamp = DateTimeField(default=datetime.datetime.now)
+    date = DateField(default=datetime.datetime.now)
     title = CharField()
     time_spent = IntegerField()
     learned = TextField()
@@ -38,7 +38,7 @@ class JournalEntry(Model):
 
     class Meta:
         database = DATABASE
-        order_by = ('-timestamp',)
+        order_by = ('-date',)
 
 
 def initialize():

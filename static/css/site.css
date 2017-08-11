@@ -74,6 +74,10 @@ footer {
 	top: 3px;
 	left: 3px;
 }
+.button.no-icon {
+	top: -10px;
+	margin-left: 10px;
+}
 .button:focus {
 	outline: 0;
 }
@@ -224,11 +228,7 @@ form textarea:hover {
 input[type=submit] {
 	margin-right: 5px;
 }
-
-
-
-
-
-
-
+#csrf_token {
+	display: none;
+}
 
