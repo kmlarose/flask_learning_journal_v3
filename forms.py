@@ -15,24 +15,28 @@ def email_exists(form, field):
 
 
 class JournalEntryForm(FlaskForm):
-    """Form for a Journal Entry"""
+    """Form to create/edit a Journal Entry"""
     title = StringField(
         'Title',
-        validators=[DataRequired()])
+        validators=[DataRequired()]
+    )
     date = DateField(
         'Date',
-        format='%m/%d/%Y',
-        validators=[DataRequired()],
-        default=datetime.datetime.now)
+        format='%Y-%m-%d',
+        validators=[DataRequired()]
+    )
     time_spent = IntegerField(
         'Time Spent',
-        validators=[DataRequired()])
+        validators=[DataRequired()]
+    )
     what_i_learned = TextAreaField(
         'What I Learned',
-        validators=[DataRequired()])
+        validators=[DataRequired()]
+    )
     resources_to_remember = TextAreaField(
         'Resources To Remember',
-        validators=[Optional()])
+        validators=[Optional()]
+    )
 
 
 class RegisterForm(FlaskForm):

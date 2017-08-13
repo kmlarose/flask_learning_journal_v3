@@ -28,13 +28,13 @@ class User(UserMixin, Model):
 
 
 class JournalEntry(Model):
-    """Class to save Journal Entry content"""
-    user = ForeignKeyField(User, related_name='journal_entries')
-    date = DateField(default=datetime.datetime.now)
+    """Class to save Journal Entries"""
+    user = ForeignKeyField(User, related_name='journal_entry')
     title = CharField()
+    date = DateField()
     time_spent = IntegerField()
-    learned = TextField()
-    resources = TextField()
+    what_i_learned = TextField()
+    resources_to_remember = TextField()
 
     class Meta:
         database = DATABASE

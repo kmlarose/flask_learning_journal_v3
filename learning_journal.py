@@ -92,30 +92,51 @@ def details():
 
 
 @app.route('/entry', methods=('GET', 'POST'))
-@app.route('/entry/<int:entry_id>', methods=('GET', 'POST'))
-def entry(entry_id=None):
+def entry():
     form = forms.JournalEntryForm()
     if form.validate_on_submit():
         try:
             models.JournalEntry.create(
                 user=g.user._get_current_object(),
                 title=form.title.data,
-                date=form.date.data.strptime('%m/%d/%Y'),
+                date=form.date.data,
                 time_spent=form.time_spent.data,
-                learned=form.what_i_learned.data,
-                resources=form.resources_to_remember.data
+                what_i_learned=form.what_i_learned.data,
+                resources_to_remember=form.resources_to_remember.data
             )
         except:
             flash("Journal Entry Failed to save...", 'error')
         else:
             flash("Journal Entry Saved", 'success')
             return redirect(url_for('index'))
+    return render_template('new.html', form=form)
 
-    # form has not been submitted or validated
-    template = 'new.html'
-    if entry_id:
-        template = 'edit.html'
-    return render_template(template, form=form)
+# @app.route('/entry', methods=('GET', 'POST'))
+# @app.route('/entry/<int:entry_id>', methods=('GET', 'POST'))
+# def entry(entry_id=None):
+#     form = forms.JournalEntryForm()
+#     if form.validate_on_submit():
+#         try:
+#             models.JournalEntry.create(
+#                 user=g.user._get_current_object(),
+#                 title=form.title.data,
+#                 # date=form.date.data.strptime('%m/%d/%Y'),
+#                 # date=form.date.data,
+#                 time_spent=form.time_spent.data,
+#                 learned=form.what_i_learned.data,
+#                 resources=form.resources_to_remember.data
+#             )
+#         except:
+#             flash("Journal Entry Failed to save...", 'error')
+#         else:
+#             flash("Journal Entry Saved", 'success')
+#             return redirect(url_for('index'))
+#
+#     # form has not been submitted or validated
+#     template = 'new.html'
+#     if entry_id:
+#         template = 'edit.html'
+#     return render_template(template, form=form)
 
 
 if __name__ == '__main__':
