@@ -1,21 +1,12 @@
 {% extends "layout.html" %}
+{% from "macros.html" import render_entries_list %}
 
 {% block content %}
-<div class="container">
     <div class="entry-list">
     {% if current_user.is_authenticated %}
-        {% if entries %}
-            {% for entry in entries %}
-            <article>
-                <h2><a href="">{{ entry.title }}</a></h2>
-                <time datetime="{{ entry.date }}">{{ entry.date.strftime('%B %d, %Y') }}</time>
-            </article>
-            {% endfor %}
-        {% else %}
-            <article>
-                <h2>No Entries...</h2>
-                <p>You'd better get journaling!</p>
-            </article>
+        {{ render_entries_list(entries, limit=5) }}
+        {% if entries.count() > 5 %}
+            <a href="{{ url_for('list') }}" class="button button-secondary">More Entries</a>
         {% endif %}
     {% else %}
     <article>
@@ -24,5 +15,4 @@
     </article>
     {% endif %}
     </div>
-</div>
 {% endblock %}

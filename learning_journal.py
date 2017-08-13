@@ -45,7 +45,7 @@ def after_request(response):
 
 @app.route('/')
 def index():
-    entries = models.JournalEntry.select().where(g.user == models.JournalEntry.user).limit(5)
+    entries = models.JournalEntry.select().where(g.user == models.JournalEntry.user)
     return render_template('index.html', entries=entries)
 
 
@@ -127,8 +127,8 @@ def entry(entry_id=None):
 @login_required
 def list():
     """Display the Journal Entries' Title and Date"""
-    entries = models.JournalEntry.select().where(g.user == models.JournalEntry.user).limit(100)
-    render_template('entries.html', entries=entries)
+    entries = models.JournalEntry.select().where(g.user == models.JournalEntry.user)
+    return render_template('entries.html', entries=entries)
 
 #
 # @app.route('/stream')

@@ -11,3 +11,26 @@
 	{{ field.label }}
 	{{ field() }}
 {% endmacro %}
+
+
+{% macro render_entries_list(entries, limit=None) %}
+	{% if entries %}
+
+		{% if limit %}
+			{% set entries = entries[:limit] %}
+		{% endif %}
+
+        {% for entry in entries %}
+        <article>
+            <h2><a href="{{ url_for('entry', entry_id=entry.id) }}">{{ entry.title }}</a></h2>
+            <time datetime="{{ entry.date }}">{{ entry.date.strftime('%B %d, %Y') }}</time>
+        </article>
+        {% endfor %}
+
+    {% else %}
+        <article>
+            <h2>No Entries...</h2>
+            <p>You'd better get journaling!</p>
+        </article>
+    {% endif %}
+{% endmacro %}

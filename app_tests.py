@@ -16,6 +16,7 @@ USER_DATA = {
     'password': 'password'
 }
 
+
 class UserModelTestCase(unittest.TestCase):
     """Test the User Model"""
     @staticmethod
@@ -178,11 +179,86 @@ class JournalEntryViewsTestCase(ViewTestCase):
             self.assertNotIn('No Entries...', rv.get_data(as_text=True))
             self.assertIn(journal_entry_data['title'], rv.get_data(as_text=True))
 
+    def test_list_view(self):
+        """The list view contains a list of journal entries, which displays Title and Date for Entry."""
+        journal_entry_data_1 = {
+            'title': 'testing 1',
+            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+            'time_spent': 4,
+            'what_i_learned': 'how to test flask views',
+            'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
+        }
+        journal_entry_data_2 = {
+            'title': 'testing 123',
+            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+            'time_spent': 8,
+            'what_i_learned': 'how to test flask views',
+            'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
+        }
+        with test_database(TEST_DB, (User, JournalEntry)):
+            UserModelTestCase.create_users(1)
+            user = User.select().get()
+            journal_entry_data_1['user'] = user
+            journal_entry_data_2['user'] = user
+            JournalEntry.create(**journal_entry_data_1)
+            JournalEntry.create(**journal_entry_data_2)
 
-# Create “list” view using the route /entries.
-# The list view contains a list of journal entries, which displays Title and Date for Entry.
-# Title should be hyperlinked to the detail page for each journal entry.
-# Include a link to add an entry.
+            self.app.post('/login', data=USER_DATA)
+            rv = self.app.get('/entries')
+            self.assertNotIn('No Entries...', rv.get_data(as_text=True))
+            self.assertIn(journal_entry_data_1['title'], rv.get_data(as_text=True))
+            self.assertIn(journal_entry_data_1['date'], rv.get_data(as_text=True))
+            self.assertIn(journal_entry_data_2['title'], rv.get_data(as_text=True))
+            self.assertIn(journal_entry_data_2['date'], rv.get_data(as_text=True))
+
+    def test_empty_entries(self):
+        """Message displays on Entries page when there are no entries"""
+        with test_database(TEST_DB, (User, JournalEntry)):
+            UserModelTestCase.create_users(1)
+            self.app.post('/login', data=USER_DATA)
+            rv = self.app.get('/entries')
+            self.assertIn("no entries", rv.get_data(as_text=True).lower())
+
+    def test_list_view(self):
+        """The list view Title should be hyperlinked to the detail page for each journal entry."""
+        journal_entry_data = {
+            'title': 'testing hyperlink',
+            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+            'time_spent': 4,
+            'what_i_learned': 'how to test flask views',
+            'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
+        }
+        with test_database(TEST_DB, (User, JournalEntry)):
+            UserModelTestCase.create_users(1)
+            user = User.select().get()
+            journal_entry_data['user'] = user
+            JournalEntry.create(**journal_entry_data)
+
+            self.app.post('/login', data=USER_DATA)
+            hyperlink = 'href="/entry/{}"'.format(JournalEntry.get().id)
+            rv = self.app.get('/entries')
+            self.assertIn(hyperlink, rv.get_data(as_text=True))
+
+    def test_more_entries_button(self):
+        """If there's more than 5 entries, the home page should display a More Entries button"""
+        journal_entry_data = {
+            'title': 'testing more entries',
+            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+            'time_spent': 4,
+            'what_i_learned': 'how to test flask views',
+            'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
+        }
+        with test_database(TEST_DB, (User, JournalEntry)):
+            UserModelTestCase.create_users(1)
+            user = User.select().get()
+            journal_entry_data['user'] = user
+            for _ in range(6):
+                JournalEntry.create(**journal_entry_data)
+
+            self.app.post('/login', data=USER_DATA)
+            rv = self.app.get('/')
+            self.assertIn('More Entries', rv.get_data(as_text=True))
+
 
 # Create “edit” view with the route “/entry”
 # that allows the user to add or edit journal entry with the following fields:
