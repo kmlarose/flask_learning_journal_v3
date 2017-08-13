@@ -1,4 +1,4 @@
-from flask import Flask, render_template, g, flash, url_for, redirect, send_from_directory
+from flask import Flask, render_template, g, flash, url_for, redirect, abort
 from flask_bcrypt import check_password_hash
 from flask_login import current_user, LoginManager, login_user, logout_user, login_required
 
@@ -45,7 +45,8 @@ def after_request(response):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    entries = models.JournalEntry.select().where(g.user == models.JournalEntry.user).limit(5)
+    return render_template('index.html', entries=entries)
 
 
 @app.route('/register', methods=('GET', 'POST'))
@@ -117,6 +118,48 @@ def entry(entry_id=None):
                 flash("Journal Entry Saved", 'success')
                 return redirect(url_for('index'))
     return render_template(template, form=form)
+
+
+# The list view contains a list of journal entries, which displays Title and Date for Entry.
+# Title should be hyperlinked to the detail page for each journal entry.
+# Include a link to add an entry.
+@app.route('/entries')
+@login_required
+def list():
+    """Display the Journal Entries' Title and Date"""
+    entries = models.JournalEntry.select().where(g.user == models.JournalEntry.user).limit(100)
+    render_template('entries.html', entries=entries)
+
+#
+# @app.route('/stream')
+# @app.route('/stream/<username>')
+# def stream(username=None):
+#     template = 'stream.html'
+#     if username and username != current_user.username:
+#         try:
+#             user = models.User.select().where(
+#                 models.User.username**username).get()
+#         except models.DoesNotExist:
+#             abort(404)
+#         else:
+#             stream = user.posts.limit(100)
+#     else:
+#         stream = current_user.get_stream().limit(100)
+#         user = current_user
+#     if username:
+#         template = 'user_stream.html'
+#     return render_template(template, stream=stream, user=user)
+#
+#
+# @app.route('/')
+# def index():
+#     stream = models.Post.select().limit(100)
+#     return render_template('stream.html', stream=stream)
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('404.html'), 404
 
 
 if __name__ == '__main__':

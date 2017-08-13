@@ -3,22 +3,26 @@
 {% block content %}
 <div class="container">
     <div class="entry-list">
-        <article>
-            <h2><a href="{{ url_for('details') }}">The best day I’ve ever had</a></h2>
-            <time datetime="2016-01-31">January 31, 2016</time>
-        </article>
-        <article>
-            <h2><a href="{{ url_for('details') }}">The absolute worst day I’ve ever had</a></h2>
-            <time datetime="2016-01-31">January 31, 2016</time>
-        </article>
-        <article>
-            <h2><a href="{{ url_for('details') }}">That time at the mall</a></h2>
-            <time datetime="2016-01-31">January 31, 2016</time>
-        </article>
-        <article>
-            <h2><a href="{{ url_for('details') }}">Dude, where’s my car?</a></h2>
-            <time datetime="2016-01-31">January 31, 2016</time>
-        </article>
+    {% if current_user.is_authenticated %}
+        {% if entries %}
+            {% for entry in entries %}
+            <article>
+                <h2><a href="">{{ entry.title }}</a></h2>
+                <time datetime="{{ entry.date }}">{{ entry.date.strftime('%B %d, %Y') }}</time>
+            </article>
+            {% endfor %}
+        {% else %}
+            <article>
+                <h2>No Entries...</h2>
+                <p>You'd better get journaling!</p>
+            </article>
+        {% endif %}
+    {% else %}
+    <article>
+        <h2>Welcome to Learning Journal</h2>
+        <p>Register or Log in to get started!</p>
+    </article>
+    {% endif %}
     </div>
 </div>
 {% endblock %}

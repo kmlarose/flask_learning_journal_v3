@@ -164,6 +164,7 @@ ul li a {
 .entry-list.single {
 	padding-bottom: 70px;
 }
+.entry-list.single p,
 .entry-list.single time {
 	font-size: 18px;
 }

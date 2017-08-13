@@ -130,22 +130,69 @@ class UserViewsTestCase(ViewTestCase):
             self.assertIn("log out", rv.get_data(as_text=True).lower())
 
 
-# Create “add/edit” view with the route “/entry”
-# that allows the user to add or edit journal entry with the following fields:
-# Title, Date, Time Spent, What You Learned, Resources to Remember.
-# Add the ability to delete a journal entry.
+class JournalEntryViewsTestCase(ViewTestCase):
+    """Test Journal Entry Views"""
+    def test_empty_db(self):
+        """Message displays when there are no entries"""
+        with test_database(TEST_DB, (User, JournalEntry)):
+            UserModelTestCase.create_users(1)
+            self.app.post('/login', data=USER_DATA)
+            rv = self.app.get('/')
+            self.assertIn("no entries", rv.get_data(as_text=True).lower())
 
-# Create “details” view with the route “/details” displaying the journal entry with all fields:
-# Title, Date, Time Spent, What You Learned, Resources to Remember.
-# Include a link to edit the entry.
+    def test_journal_entry_create(self):
+        """Test can create new JournalEntry, redirects to homepage, and adds to the database."""
+        journal_entry_data = {
+            'title': 'testing new journal entries',
+            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+            'time_spent': 2,
+            'what_i_learned': 'how to test flask views',
+            'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
+        }
+        with test_database(TEST_DB, (User, JournalEntry)):
+            UserModelTestCase.create_users(1)
+            self.app.post('/login', data=USER_DATA)
+
+            journal_entry_data['user'] = User.select().get()
+            rv = self.app.post('/entry', data=journal_entry_data)
+            self.assertEqual(rv.status_code, 302)
+            self.assertEqual(rv.location, 'http://localhost/')
+            self.assertEqual(JournalEntry.select().count(), 1)
+
+    def test_journal_entry_list(self):
+        """Test new Journal Entries display on the home page, and the 'no entries' message does not."""
+        journal_entry_data = {
+            'title': 'testing new journal entries',
+            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+            'time_spent': 2,
+            'what_i_learned': 'how to test flask views',
+            'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
+        }
+        with test_database(TEST_DB, (User, JournalEntry)):
+            UserModelTestCase.create_users(1)
+            journal_entry_data['user'] = User.select().get()
+            JournalEntry.create(**journal_entry_data)
+            self.app.post('/login', data=USER_DATA)
+
+            rv = self.app.get('/')
+            self.assertNotIn('No Entries...', rv.get_data(as_text=True))
+            self.assertIn(journal_entry_data['title'], rv.get_data(as_text=True))
+
 
 # Create “list” view using the route /entries.
 # The list view contains a list of journal entries, which displays Title and Date for Entry.
 # Title should be hyperlinked to the detail page for each journal entry.
 # Include a link to add an entry.
 
-# Use the supplied HTML/CSS to build and style your pages.
-# Use CSS to style headings, font colors, journal entry container colors, body colors.
+# Create “edit” view with the route “/entry”
+# that allows the user to add or edit journal entry with the following fields:
+# Title, Date, Time Spent, What You Learned, Resources to Remember.
+
+# Add the ability to delete a journal entry.
+
+# Create “details” view with the route “/details” displaying the journal entry with all fields:
+# Title, Date, Time Spent, What You Learned, Resources to Remember.
+# Include a link to edit the entry.
 
 # Add tags to journal entries in the model.
 # Add tags to journal entries on the listing page and allow the tags to be links to a list of specific tags.
