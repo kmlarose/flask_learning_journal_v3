@@ -1,7 +1,7 @@
 import datetime
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, TextAreaField, PasswordField
+from wtforms import StringField, TextAreaField, PasswordField
 from wtforms.fields.html5 import DateField
 from wtforms.validators import DataRequired, ValidationError, Optional, Email, Length, EqualTo
 
@@ -25,7 +25,7 @@ class JournalEntryForm(FlaskForm):
         format='%Y-%m-%d',
         validators=[DataRequired()]
     )
-    time_spent = IntegerField(
+    time_spent = StringField(
         'Time Spent',
         validators=[DataRequired()]
     )

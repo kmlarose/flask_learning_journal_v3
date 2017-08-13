@@ -88,9 +88,15 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/details')
-def details():
-    return render_template('detail.html')
+@app.route('/details/<int:entry_id>')
+@login_required
+def details(entry_id):
+    try:
+        entry = models.JournalEntry.get(models.JournalEntry.id==entry_id)
+    except models.DoesNotExist:
+        abort(404)
+    else:
+        return render_template('detail.html', entry=entry)
 
 
 @app.route('/entry', methods=('GET', 'POST'))
@@ -120,41 +126,12 @@ def entry(entry_id=None):
     return render_template(template, form=form)
 
 
-# The list view contains a list of journal entries, which displays Title and Date for Entry.
-# Title should be hyperlinked to the detail page for each journal entry.
-# Include a link to add an entry.
 @app.route('/entries')
 @login_required
 def list():
     """Display the Journal Entries' Title and Date"""
     entries = models.JournalEntry.select().where(g.user == models.JournalEntry.user)
     return render_template('entries.html', entries=entries)
-
-#
-# @app.route('/stream')
-# @app.route('/stream/<username>')
-# def stream(username=None):
-#     template = 'stream.html'
-#     if username and username != current_user.username:
-#         try:
-#             user = models.User.select().where(
-#                 models.User.username**username).get()
-#         except models.DoesNotExist:
-#             abort(404)
-#         else:
-#             stream = user.posts.limit(100)
-#     else:
-#         stream = current_user.get_stream().limit(100)
-#         user = current_user
-#     if username:
-#         template = 'user_stream.html'
-#     return render_template(template, stream=stream, user=user)
-#
-#
-# @app.route('/')
-# def index():
-#     stream = models.Post.select().limit(100)
-#     return render_template('stream.html', stream=stream)
 
 
 @app.errorhandler(404)

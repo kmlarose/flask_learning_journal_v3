@@ -32,7 +32,7 @@ class JournalEntry(Model):
     user = ForeignKeyField(User, related_name='journal_entry')
     title = CharField()
     date = DateField()
-    time_spent = IntegerField()
+    time_spent = CharField()
     what_i_learned = TextField()
     resources_to_remember = TextField()
 

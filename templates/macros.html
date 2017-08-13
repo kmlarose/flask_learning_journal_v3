@@ -22,7 +22,7 @@
 
         {% for entry in entries %}
         <article>
-            <h2><a href="{{ url_for('entry', entry_id=entry.id) }}">{{ entry.title }}</a></h2>
+            <h2><a href="{{ url_for('details', entry_id=entry.id) }}">{{ entry.title }}</a></h2>
             <time datetime="{{ entry.date }}">{{ entry.date.strftime('%B %d, %Y') }}</time>
         </article>
         {% endfor %}

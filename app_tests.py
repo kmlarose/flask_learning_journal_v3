@@ -60,16 +60,11 @@ class JournalEntryModelTestCase(unittest.TestCase):
                 user=user,
                 title='Testing Journal Entries',
                 date=datetime.datetime.now().strftime('%Y-%m-%d'),
-                time_spent=22,
+                time_spent='22',
                 what_i_learned='Hopefully, I learn if this works or not!',
                 resources_to_remember='teamtreehouse.com'
             )
-            # journal_entry = JournalEntry.select().get()
-
-            self.assertEqual(
-                JournalEntry.select().count(),
-                1
-            )
+            self.assertEqual(JournalEntry.select().count(), 1)
             self.assertEqual(JournalEntry.user, user)
 
 
@@ -146,7 +141,7 @@ class JournalEntryViewsTestCase(ViewTestCase):
         journal_entry_data = {
             'title': 'testing new journal entries',
             'date': datetime.datetime.now().strftime('%Y-%m-%d'),
-            'time_spent': 2,
+            'time_spent': '2',
             'what_i_learned': 'how to test flask views',
             'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
         }
@@ -165,7 +160,7 @@ class JournalEntryViewsTestCase(ViewTestCase):
         journal_entry_data = {
             'title': 'testing new journal entries',
             'date': datetime.datetime.now().strftime('%Y-%m-%d'),
-            'time_spent': 2,
+            'time_spent': '2',
             'what_i_learned': 'how to test flask views',
             'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
         }
@@ -184,14 +179,14 @@ class JournalEntryViewsTestCase(ViewTestCase):
         journal_entry_data_1 = {
             'title': 'testing 1',
             'date': datetime.datetime.now().strftime('%Y-%m-%d'),
-            'time_spent': 4,
+            'time_spent': '4',
             'what_i_learned': 'how to test flask views',
             'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
         }
         journal_entry_data_2 = {
             'title': 'testing 123',
             'date': datetime.datetime.now().strftime('%Y-%m-%d'),
-            'time_spent': 8,
+            'time_spent': '8',
             'what_i_learned': 'how to test flask views',
             'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
         }
@@ -219,12 +214,12 @@ class JournalEntryViewsTestCase(ViewTestCase):
             rv = self.app.get('/entries')
             self.assertIn("no entries", rv.get_data(as_text=True).lower())
 
-    def test_list_view(self):
+    def test_list_view_hyperlink(self):
         """The list view Title should be hyperlinked to the detail page for each journal entry."""
         journal_entry_data = {
             'title': 'testing hyperlink',
             'date': datetime.datetime.now().strftime('%Y-%m-%d'),
-            'time_spent': 4,
+            'time_spent': '4',
             'what_i_learned': 'how to test flask views',
             'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
         }
@@ -235,7 +230,7 @@ class JournalEntryViewsTestCase(ViewTestCase):
             JournalEntry.create(**journal_entry_data)
 
             self.app.post('/login', data=USER_DATA)
-            hyperlink = 'href="/entry/{}"'.format(JournalEntry.get().id)
+            hyperlink = 'href="/details/{}"'.format(JournalEntry.get().id)
             rv = self.app.get('/entries')
             self.assertIn(hyperlink, rv.get_data(as_text=True))
 
@@ -244,7 +239,7 @@ class JournalEntryViewsTestCase(ViewTestCase):
         journal_entry_data = {
             'title': 'testing more entries',
             'date': datetime.datetime.now().strftime('%Y-%m-%d'),
-            'time_spent': 4,
+            'time_spent': '4',
             'what_i_learned': 'how to test flask views',
             'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
         }
@@ -259,16 +254,57 @@ class JournalEntryViewsTestCase(ViewTestCase):
             rv = self.app.get('/')
             self.assertIn('More Entries', rv.get_data(as_text=True))
 
+    def test_details_view(self):
+        """Details page displays all the fields Title, Date, Time Spent, What You Learned, Resources to Remember."""
+        journal_entry_data = {
+            'title': 'testing new journal entries',
+            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+            'time_spent': '2',
+            'what_i_learned': 'how to test flask views',
+            'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
+        }
+        with test_database(TEST_DB, (User, JournalEntry)):
+            UserModelTestCase.create_users(1)
+            journal_entry_data['user'] = User.select().get()
+            JournalEntry.create(**journal_entry_data)
+            self.app.post('/login', data=USER_DATA)
+            rv = self.app.get('/details/{}'.format(JournalEntry.get().id))
+            self.assertIn(journal_entry_data['title'], rv.get_data(as_text=True))
+            self.assertIn(journal_entry_data['date'], rv.get_data(as_text=True))
+            self.assertIn(journal_entry_data['time_spent'], rv.get_data(as_text=True))
+            self.assertIn(journal_entry_data['what_i_learned'], rv.get_data(as_text=True))
+            self.assertIn(journal_entry_data['resources_to_remember'], rv.get_data(as_text=True))
+
+    def test_details_not_found(self):
+        """Test redirect when details not found"""
+        with test_database(TEST_DB, (User, JournalEntry)):
+            rv = self.app.get('/details/1')
+            self.assertNotEqual(rv.status_code, 404)
+            self.assertIn('Redirecting...', rv.get_data(as_text=True))
+
+    def test_details_link_to_edit(self):
+        """Details page includes a link to edit the entry"""
+        journal_entry_data = {
+            'title': 'testing new journal entries',
+            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+            'time_spent': '2',
+            'what_i_learned': 'how to test flask views',
+            'resources_to_remember': 'teamtreehouse.com, stackoverflow.com, flask.pocoo.org'
+        }
+        with test_database(TEST_DB, (User, JournalEntry)):
+            UserModelTestCase.create_users(1)
+            journal_entry_data['user'] = User.select().get()
+            JournalEntry.create(**journal_entry_data)
+            self.app.post('/login', data=USER_DATA)
+            rv = self.app.get('/details/{}'.format(JournalEntry.get().id))
+            self.assertIn('href="/entry/', rv.get_data(as_text=True))
+
 
 # Create “edit” view with the route “/entry”
 # that allows the user to add or edit journal entry with the following fields:
 # Title, Date, Time Spent, What You Learned, Resources to Remember.
 
 # Add the ability to delete a journal entry.
-
-# Create “details” view with the route “/details” displaying the journal entry with all fields:
-# Title, Date, Time Spent, What You Learned, Resources to Remember.
-# Include a link to edit the entry.
 
 # Add tags to journal entries in the model.
 # Add tags to journal entries on the listing page and allow the tags to be links to a list of specific tags.
