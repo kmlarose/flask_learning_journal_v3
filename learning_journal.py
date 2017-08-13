@@ -1,4 +1,4 @@
-from flask import Flask, render_template, g, flash, url_for, redirect
+from flask import Flask, render_template, g, flash, url_for, redirect, send_from_directory
 from flask_bcrypt import check_password_hash
 from flask_login import current_user, LoginManager, login_user, logout_user, login_required
 
@@ -13,6 +13,7 @@ HOST = '0.0.0.0'
 
 app = Flask(__name__)
 app.secret_key = 'luGKI^T*&G5idfK*UFlg6f6i7^f'
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -31,7 +32,7 @@ def load_user(user_id):
 def before_request():
     """Connect to the database before each request."""
     g.db = models.DATABASE
-    g.db.connect()
+    g.db.get_conn()
     g.user = current_user
 
 
@@ -92,51 +93,30 @@ def details():
 
 
 @app.route('/entry', methods=('GET', 'POST'))
-def entry():
+@app.route('/entry/<int:entry_id>', methods=('GET', 'POST'))
+def entry(entry_id=None):
+    """Page to create a new entry or edit an existing entry"""
     form = forms.JournalEntryForm()
-    if form.validate_on_submit():
-        try:
-            models.JournalEntry.create(
-                user=g.user._get_current_object(),
-                title=form.title.data,
-                date=form.date.data,
-                time_spent=form.time_spent.data,
-                what_i_learned=form.what_i_learned.data,
-                resources_to_remember=form.resources_to_remember.data
-            )
-        except:
-            flash("Journal Entry Failed to save...", 'error')
-        else:
-            flash("Journal Entry Saved", 'success')
-            return redirect(url_for('index'))
-    return render_template('new.html', form=form)
-
-# @app.route('/entry', methods=('GET', 'POST'))
-# @app.route('/entry/<int:entry_id>', methods=('GET', 'POST'))
-# def entry(entry_id=None):
-#     form = forms.JournalEntryForm()
-#     if form.validate_on_submit():
-#         try:
-#             models.JournalEntry.create(
-#                 user=g.user._get_current_object(),
-#                 title=form.title.data,
-#                 # date=form.date.data.strptime('%m/%d/%Y'),
-#                 # date=form.date.data,
-#                 time_spent=form.time_spent.data,
-#                 learned=form.what_i_learned.data,
-#                 resources=form.resources_to_remember.data
-#             )
-#         except:
-#             flash("Journal Entry Failed to save...", 'error')
-#         else:
-#             flash("Journal Entry Saved", 'success')
-#             return redirect(url_for('index'))
-#
-#     # form has not been submitted or validated
-#     template = 'new.html'
-#     if entry_id:
-#         template = 'edit.html'
-#     return render_template(template, form=form)
+    if entry_id:  # edit an existing entry
+        template = 'edit.html'
+    else:  # create a new entry
+        template = 'new.html'
+        if form.validate_on_submit():
+            try:
+                models.JournalEntry.create(
+                    user=g.user._get_current_object(),
+                    title=form.title.data,
+                    date=form.date.data,
+                    time_spent=form.time_spent.data,
+                    what_i_learned=form.what_i_learned.data,
+                    resources_to_remember=form.resources_to_remember.data
+                )
+            except:
+                flash("Journal Entry Failed to save...", 'error')
+            else:
+                flash("Journal Entry Saved", 'success')
+                return redirect(url_for('index'))
+    return render_template(template, form=form)
 
 
 if __name__ == '__main__':

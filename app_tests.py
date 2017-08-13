@@ -1,3 +1,4 @@
+import datetime
 import unittest
 
 from playhouse.test_utils import test_database
@@ -10,6 +11,10 @@ TEST_DB = SqliteDatabase(':memory:')
 TEST_DB.connect()
 TEST_DB.create_tables([User, JournalEntry], safe=True)
 
+USER_DATA = {
+    'email': 'test_0@example.com',
+    'password': 'password'
+}
 
 class UserModelTestCase(unittest.TestCase):
     """Test the User Model"""
@@ -53,17 +58,77 @@ class JournalEntryModelTestCase(unittest.TestCase):
             JournalEntry.create(
                 user=user,
                 title='Testing Journal Entries',
+                date=datetime.datetime.now().strftime('%Y-%m-%d'),
                 time_spent=22,
-                learned='Hopefully, I learn if this works or not!',
-                resources='teamtreehouse.com'
+                what_i_learned='Hopefully, I learn if this works or not!',
+                resources_to_remember='teamtreehouse.com'
             )
-            journal_entry = JournalEntry.select().get()
+            # journal_entry = JournalEntry.select().get()
 
             self.assertEqual(
                 JournalEntry.select().count(),
                 1
             )
             self.assertEqual(JournalEntry.user, user)
+
+
+class ViewTestCase(unittest.TestCase):
+    """Parent class for testing app views. This sets up a test app."""
+    def setUp(self):
+        learning_journal.app.config['TESTING'] = True
+        learning_journal.app.config['WTF_CSRF_ENABLED'] = False
+        self.app = learning_journal.app.test_client()
+
+
+class UserViewsTestCase(ViewTestCase):
+    def test_registration(self):
+        data = {
+            'email': 'test@example.com',
+            'password': 'password',
+            'password2': 'password'
+        }
+        with test_database(TEST_DB, (User,)):
+            rv = self.app.post(
+                '/register',
+                data=data)
+            self.assertEqual(rv.status_code, 302)
+            self.assertEqual(rv.location, 'http://localhost/')
+
+    def test_good_login(self):
+        with test_database(TEST_DB, (User,)):
+            UserModelTestCase.create_users(1)
+            rv = self.app.post('/login', data=USER_DATA)
+            self.assertEqual(rv.status_code, 302)
+            self.assertEqual(rv.location, 'http://localhost/')
+
+    def test_bad_login(self):
+        with test_database(TEST_DB, (User,)):
+            rv = self.app.post('/login', data=USER_DATA)
+            self.assertEqual(rv.status_code, 200)
+
+    def test_logout(self):
+        with test_database(TEST_DB, (User,)):
+            # Create and login the user
+            UserModelTestCase.create_users(1)
+            self.app.post('/login', data=USER_DATA)
+
+            rv = self.app.get('/logout')
+            self.assertEqual(rv.status_code, 302)
+            self.assertEqual(rv.location, 'http://localhost/')
+
+    def test_logged_out_menu(self):
+        rv = self.app.get('/')
+        self.assertIn("register", rv.get_data(as_text=True).lower())
+        self.assertIn("log in", rv.get_data(as_text=True).lower())
+
+    def test_logged_in_menu(self):
+        with test_database(TEST_DB, (User,)):
+            UserModelTestCase.create_users(1)
+            self.app.post('/login', data=USER_DATA)
+            rv = self.app.get('/')
+            self.assertIn("new entry", rv.get_data(as_text=True).lower())
+            self.assertIn("log out", rv.get_data(as_text=True).lower())
+
 
 # Create “add/edit” view with the route “/entry”
 # that allows the user to add or edit journal entry with the following fields:
