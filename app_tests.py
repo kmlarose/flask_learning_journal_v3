@@ -5,7 +5,7 @@ from playhouse.test_utils import test_database
 from peewee import *
 
 import learning_journal
-from models import User, JournalEntry
+from models import User, JournalEntry, Tag, JournalEntryTag
 
 TEST_DB = SqliteDatabase(':memory:')
 TEST_DB.connect()
@@ -299,17 +299,128 @@ class JournalEntryViewsTestCase(ViewTestCase):
             rv = self.app.get('/details/{}'.format(JournalEntry.get().id))
             self.assertIn('href="/entry/', rv.get_data(as_text=True))
 
+    # def test_edit_view_loads_data(self):
+    #     """Edit view allows the user to edit Title, Date, Time Spent, What You Learned, Resources to Remember."""
+    #     journal_entry_data = {
+    #         'title': 'testing_title',
+    #         'date': '1980-01-01',
+    #         'time_spent': 'testing_time',
+    #         'what_i_learned': 'testing_learned',
+    #         'resources_to_remember': 'testing_resources'
+    #     }
+    #     with test_database(TEST_DB, (User, JournalEntry)):
+    #         UserModelTestCase.create_users(1)
+    #         journal_entry_data['user'] = User.select().get()
+    #         JournalEntry.create(**journal_entry_data)
+    #         self.app.post('/login', data=USER_DATA)
+    #         rv = self.app.get('/entry/{}'.format(JournalEntry.get().id))
+    #         self.assertIn('testing_title', rv.get_data(as_text=True))
+    #         self.assertIn('01/01/1980', rv.get_data(as_text=True))
+    #         self.assertIn('testing_time', rv.get_data(as_text=True))
+    #         self.assertIn('testing_learned', rv.get_data(as_text=True))
+    #         self.assertIn('testing_resources', rv.get_data(as_text=True))
+    #
+    # def test_edit_not_found(self):
+    #     """Test redirect when edit entry not found"""
+    #     with test_database(TEST_DB, (User, JournalEntry)):
+    #         rv = self.app.get('/edit/1')
+    #         self.assertNotEqual(rv.status_code, 404)
+    #         self.assertIn('Redirecting...', rv.get_data(as_text=True))
 
-# Create “edit” view with the route “/entry”
-# that allows the user to add or edit journal entry with the following fields:
-# Title, Date, Time Spent, What You Learned, Resources to Remember.
+
+class TagModelTestCase(unittest.TestCase):
+    """Tests to make sure the Tag Model works"""
+
+    def test_create_tag(self):
+        """Test creating tag"""
+        with test_database(TEST_DB, (Tag,)):
+            Tag.create(tag='test_tag')
+            self.assertEqual(Tag.select().count(), 1)
+
+    def test_create_duplicate_tag(self):
+        """Make sure duplicate tags cannot be created"""
+        with test_database(TEST_DB, (Tag,)):
+            Tag.create_tag(tag='test_tag')
+            with self.assertRaises(ValueError):
+                Tag.create_tag(tag='test_tag')
+
+    def test_many_to_many_relationships(self):
+        """Make sure JournalEntries and Tags can have many to many relationships"""
+        journal_entry_data_1 = {
+            'title': 'entry 1',
+            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+            'time_spent': '111',
+            'what_i_learned': 'many to many relationships',
+            'resources_to_remember': 'docs.peewee-orm.com'
+        }
+        journal_entry_data_2 = {
+            'title': 'entry 2',
+            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+            'time_spent': '222',
+            'what_i_learned': 'many to many relationships',
+            'resources_to_remember': 'docs.peewee-orm.com'
+        }
+        with test_database(TEST_DB, (User, JournalEntry, Tag, JournalEntryTag)):
+            # create the user
+            UserModelTestCase.create_users(1)
+
+            # create the journal entries
+            journal_entry_data_1['user'] = User.select().get()
+            journal_entry_data_2['user'] = User.select().get()
+            JournalEntry.create(**journal_entry_data_1)
+            JournalEntry.create(**journal_entry_data_2)
+            entry1 = JournalEntry.get(JournalEntry.title == 'entry 1')
+            entry2 = JournalEntry.get(JournalEntry.title == 'entry 2')
+
+            # create the tags
+            Tag.create_tag(tag='first')
+            Tag.create_tag(tag='both')
+            Tag.create_tag(tag='second')
+            tag1 = Tag.get(Tag.tag == 'first')
+            tag2 = Tag.get(Tag.tag == 'both')
+            tag3 = Tag.get(Tag.tag == 'second')
+
+            # tie tags to entries
+            entry1.tags.add([Tag.get(Tag.tag == 'first'),
+                             Tag.get(Tag.tag == 'both')])
+
+            entry2.tags.add([Tag.get(Tag.tag == 'second'),
+                             Tag.get(Tag.tag == 'both')])
+
+            # assertions
+            self.assertIn(tag1, entry1.tags)
+            self.assertIn(tag2, entry1.tags)
+            self.assertNotIn(tag3, entry1.tags)
+
+            self.assertNotIn(tag1, entry2.tags)
+            self.assertIn(tag2, entry2.tags)
+            self.assertIn(tag3, entry2.tags)
+
+            self.assertIn(entry1, tag1.journal_entries)
+            self.assertNotIn(entry2, tag1.journal_entries)
+
+            self.assertIn(entry1, tag2.journal_entries)
+            self.assertIn(entry2, tag2.journal_entries)
+
+            self.assertNotIn(entry1, tag3.journal_entries)
+            self.assertIn(entry2, tag3.journal_entries)
+
+
+
+                # tag model works
+
+# journal entry can have multiple tags
+# tag can have multiple journal entries
+
+    # model class for adding / editing tags
+    # Add tags to journal entries in the model.
 
 # Add the ability to delete a journal entry.
 
-# Add tags to journal entries in the model.
+
 # Add tags to journal entries on the listing page and allow the tags to be links to a list of specific tags.
 # Add tags to the details page.
-# Create password protection or user login (provide credentials for code review).
+# (provide credentials for code review).
 # Routing uses slugs.
 
 

@@ -3,6 +3,7 @@ import datetime
 from flask_bcrypt import generate_password_hash
 from flask_login import UserMixin
 from peewee import *
+from playhouse.fields import ManyToManyField
 
 DATABASE = SqliteDatabase('journal.db')
 
@@ -41,8 +42,27 @@ class JournalEntry(Model):
         order_by = ('-date',)
 
 
+class Tag(Model):
+    """Class to save Journal Entry Tags"""
+    tag = CharField(unique=True)
+    journal_entries = ManyToManyField(JournalEntry, related_name='tags')
+
+    class Meta:
+        database = DATABASE
+
+    @classmethod
+    def create_tag(cls, tag):
+        try:
+            with DATABASE.transaction():
+                cls.create(tag=tag)
+        except IntegrityError:
+            raise ValueError("Tag already exists")
+
+JournalEntryTag = Tag.journal_entries.get_through_model()
+
+
 def initialize():
     """Set up the database tables, if necessary"""
     DATABASE.connect()
-    DATABASE.create_tables([User, JournalEntry], safe=True)
+    DATABASE.create_tables([User, JournalEntry, Tag, JournalEntryTag], safe=True)
     DATABASE.close()

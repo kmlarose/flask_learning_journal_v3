@@ -106,6 +106,8 @@ def entry(entry_id=None):
     form = forms.JournalEntryForm()
     if entry_id:  # edit an existing entry
         template = 'edit.html'
+        entry = models.JournalEntry.get(models.JournalEntry.id==entry_id)
+
     else:  # create a new entry
         template = 'new.html'
         if form.validate_on_submit():
